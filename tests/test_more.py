@@ -4,8 +4,8 @@ from personalization import BaseMachineLearningPipeline
 
 
 class DummyPipeline(BaseMachineLearningPipeline):
-    """A test class to check exceptions are raised
-    if methods are not overridden in the child class.
+    """A test class to check exceptions are not raised
+    if methods are overridden in the child class.
     """
 
     def prepare_datasets(self):
@@ -13,6 +13,9 @@ class DummyPipeline(BaseMachineLearningPipeline):
 
     def train(self):
         """Override the required train method."""
+
+    def __del__(self):
+        """Override the required __del__ method."""
 
 
 class TestDummyPipeline:
@@ -31,25 +34,7 @@ class TestBaseMachineLearningPipeline:
             BaseMachineLearningPipeline()
 
     def test_set_model(self):
-        class ConcretePipeline(BaseMachineLearningPipeline):
-            """
-            A concrete implementation of a machine learning pipeline.
-            """
 
-            def prepare_datasets(self):
-                """
-                Prepare the data for training the machine learning model.
-                """
-                # TODO: implement prepare_datasets method
-                return "Datasets prepared"
-
-            def train(self):
-                """
-                Train the machine learning model.
-                """
-                # TODO: implement train method
-                return "Model trained"
-
-        pipeline = ConcretePipeline()
+        pipeline = DummyPipeline()
         pipeline.model = "test_model"
         assert pipeline.model == "test_model"

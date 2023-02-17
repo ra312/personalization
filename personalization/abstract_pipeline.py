@@ -43,7 +43,7 @@ class BaseMachineLearningPipeline(ABC):
     def train(self):
         """Abstract method that trains the machine learning model."""
 
+    @abstractmethod
     def __del__(self):
         """Destructor method for the machine learning pipeline
         that releases memory occupied by class instance."""
-        del self._

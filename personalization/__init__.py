@@ -26,4 +26,6 @@ Requirements: we want to create a machine learning pipeline which satisfies the 
 """
 __version__ = "0.0.1"
 
-__all__ = "BaseMachineLearningPipeline"
+from .abstract_pipeline import BaseMachineLearningPipeline
+
+__all__ = ["BaseMachineLearningPipeline"]
