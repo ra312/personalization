@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "personalization"
+version = "0.0.1"
+description = "An end-to-end machine learning pipeline to train ml model and deploy it to realtime inference endpoint"
+authors = ["Rauan Akylzhanov <akylzhanov.r@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"
+scikit-learn = "^1.2.1"
+pre-commit = "^3.0.4"
+
+[tool.poetry.dev-dependencies]
+vulture = ">=1.0"
+bandit = ">=1.6"
+safety = ">=1.8"
+isort = ">=5.3"
+flake8-bugbear = ">=19.8"
+black = { version = ">=18.3-alpha.0", allow-prereleases = true }
+mypy = ">=0.730.0"
+ipython = ">=7.7"
+pytest = ">=5.0"
+pytest-cov = ">=2.7"
+pytest-mock = ">=1.10"
+pep8-naming = ">=0.8.2"
+cruft = ">=2.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
+
+[tool.black]
+line-length = 100
+
+[tool.isort]
+profile = "hug"
