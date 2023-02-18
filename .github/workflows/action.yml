@@ -30,13 +30,6 @@ jobs:
           poetry install
           poetry run pre-commit run --all-files --color always || true
           poetry run pytest --cov=personalization --cov-report xml:coverage.xml
-      - name: Save coverage report as artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: coverage
-          path: coverage.xml
-      - name: Check coverage threshold
-        run: |
           COVERAGE=$(awk '{print $NF}' <(grep '^TOTAL' <(tail -n +2 coverage.xml)))
           if (( $(echo "$COVERAGE < 90" | bc -l) )); then
             echo "Coverage below threshold: $COVERAGE%"
