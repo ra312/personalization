@@ -2,7 +2,11 @@ name: CI
 
 on:
   push:
+    paths:
+      - 'personalization/**'
   pull_request:
+    paths:
+      - 'personalization/**'
 
 env:
   PYTHON_VERSION: ${{ secrets.PYTHON_VERSION }}
