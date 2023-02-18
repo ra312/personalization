@@ -11,6 +11,9 @@ python = ">=3.8.1,<4.0"
 scikit-learn = "^1.2.1"
 pre-commit = "^3.0.4"
 autoflake = "^2.0.1"
+polars = "^0.16.6"
+pandas = "^1.5.3"
+coverage = "^7.1.0"
 
 [tool.poetry.dev-dependencies]
 vulture = ">=1.0"
