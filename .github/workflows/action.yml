@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  PYTHON_VERSION: ${{ secrets.PYTHON_VERSION }}
+  POETRY_VERSION: ${{ secrets.POETRY_VERSION }}
+
+jobs:
+  install-deps-and-test:
+    name: Install Poetry and Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org/ | POETRY_VERSION=${{ env.POETRY_VERSION }} python
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies and main package
+        run: |
+          poetry install --no-root
+          poetry install
+          poetry run pre-commit run --all-files --color always || true
+          poetry run pytest --cov=personalization --cov-report xml:coverage.xml
+          COVERAGE=$(awk '{print $NF}' <(grep '^TOTAL' <(tail -n +2 coverage.xml)))
+          if (( $(echo "$COVERAGE < 90" | bc -l) )); then
+            echo "Coverage below threshold: $COVERAGE%"
+            exit 1
+          fi
