@@ -6,32 +6,27 @@ import pytest
 
 from personalization.ranking_pipeline import RankingPipeline
 
+from .utils import (
+    generate_sessions_dataframe,
+    generate_venues_dataframe,
+)
+
 
 @pytest.fixture
 def sessions_csv_path(tmp_path):
     """Create a temporary CSV file with session data and return its path."""
-    sessions_data = [
-        {"session_id": 1, "venue_id": 1},
-        {"session_id": 2, "venue_id": 2},
-        {"session_id": 3, "venue_id": None},
-    ]
+
     sessions_csv_path_string = os.path.join(tmp_path, "sessions.csv")
-    pd.DataFrame(sessions_data).to_csv(
-        sessions_csv_path_string, index=False
-    )
+    generate_sessions_dataframe().write_csv(sessions_csv_path_string)
     return sessions_csv_path_string
 
 
 @pytest.fixture
 def venues_csv_path(tmp_path):
     """Create a temporary CSV file with venue data and return its path."""
-    venues_data = [
-        {"venue_id": 1, "name": "Venue 1"},
-        {"venue_id": 2, "name": "Venue 2"},
-        {"venue_id": 3, "name": None},
-    ]
+    # venues_data = {"venue_id": [1, 2, 3], "name": ["Venue 1", "Venue 2", None]}
     venues_csv_path_str = os.path.join(tmp_path, "venues.csv")
-    pd.DataFrame(venues_data).to_csv(venues_csv_path_str, index=False)
+    generate_venues_dataframe().write_csv(venues_csv_path_str)
     return venues_csv_path_str
 
 
@@ -39,10 +34,12 @@ def test_drop_nulls(sessions_csv_path, venues_csv_path):
     """Test that null rows are dropped and logged correctly."""
 
     pipeline = RankingPipeline(sessions_csv_path, venues_csv_path)
-    pipeline.prepare_datasets()
+    pipeline.__drop__nulls__()
+    # pipeline.prepare_datasets()
 
     # Check that null rows were dropped from venues dataframe
-    assert pipeline.venues.shape == (2, 2)
+    assert pipeline.venues.shape == (9, 6)
+    assert pipeline.sessions.shape == (9, 8)
 
 
 def test_csv_path_not_proviced():
@@ -115,3 +112,32 @@ def test_validate_columns(sessions_csv_path, venues_csv_path):
         venues_data = venues_data.drop(columns=["venue_id"])
         venues_data.to_csv(venues_csv_path, index=False)
         RankingPipeline(sessions_csv_path, venues_csv_path)
+
+
+def test_join_sessions_and_venues_no_data_loss(
+    sessions_csv_path, venues_csv_path
+):
+    """Test that no rows are lost after joining sessions and venues data."""
+    pipeline = RankingPipeline(sessions_csv_path, venues_csv_path)
+    # we extract row count from class attribute since we drop null columns
+    sessions_count = pipeline.sessions.shape[0]
+    venues_count = pipeline.venues.shape[0]
+    pipeline.__join__sessions__and__venues__()
+    # Check that the number of rows
+    #  is the same as
+    # the sum of the number of rows
+    # in the two input files
+    expected_num_rows = min(sessions_count, venues_count)
+    assert pipeline.ranking_data.shape[0] == expected_num_rows
+
+
+def test_join_sessions_and_venues_no_duplicate_columns(
+    sessions_csv_path, venues_csv_path
+):
+    """Test that no duplicate columns are created after joining sessions and venues data."""
+    pipeline = RankingPipeline(sessions_csv_path, venues_csv_path)
+    pipeline.__join__sessions__and__venues__()
+    # Check that no column names appear more than once in the output dataframe
+    assert set(pipeline.ranking_data.columns) == set(
+        pipeline.sessions.columns + pipeline.venues.columns
+    )

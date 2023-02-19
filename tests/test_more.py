@@ -34,7 +34,6 @@ class TestBaseMachineLearningPipeline:
             BaseMachineLearningPipeline()
 
     def test_set_model(self):
-
         pipeline = DummyPipeline()
         pipeline.model = "test_model"
         assert pipeline.model == "test_model"
