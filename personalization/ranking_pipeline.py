@@ -135,7 +135,6 @@ class RankingPipeline(BaseMachineLearningPipeline):
         )
         self.__convert__boolean__to__int__()
 
-
     def prepare_datasets(self) -> None:
         self.__drop__nulls__()
         self.__join__sessions__and__venues__()
@@ -209,11 +208,6 @@ class RankingPipeline(BaseMachineLearningPipeline):
         pass
 
     def __del__(self) -> None:
-
-    def train(self):
-        pass
-
-    def __del__(self):
         """
         Clean up any resources used by the RankingPipeline object.
         """
