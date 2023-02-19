@@ -141,3 +141,64 @@ def test_join_sessions_and_venues_no_duplicate_columns(
     assert set(pipeline.ranking_data.columns) == set(
         pipeline.sessions.columns + pipeline.venues.columns
     )
+
+
+def test_save_datasets(sessions_csv_path, venues_csv_path):
+    # Set up the test
+    train_data_path = "/tmp/train_data.binary"
+    val_data_path = "/tmp/val_data.binary"
+    pipeline = RankingPipeline(
+        sessions_csv_path,
+        venues_csv_path,
+        train_data_path=train_data_path,
+        val_data_path=val_data_path,
+    )
+    pipeline.prepare_datasets()
+    # Call the method being tested
+    pipeline.__save__datasets__()
+
+    # Check that the binary files were created
+    assert os.path.exists(train_data_path)
+    assert os.path.exists(val_data_path)
+
+
+def test_train_fails_if_invalid(
+    sessions_csv_path, venues_csv_path
+) -> None:
+    pipeline = RankingPipeline(sessions_csv_path, venues_csv_path)
+    with pytest.raises(ValueError):
+        # case when train_set is empty
+        lgb_params = {
+            "objective": "lambdarank",
+            "num_leaves": 100,
+            "min_sum_hessian_in_leaf": 10,
+            "metric": "ndcg",
+            "ndcg_eval_at": [10, 20, 40],
+            "learning_rate": 0.8,
+            "force_row_wise": True,
+            "num_iterations": 2,
+        }
+        pipeline.train(params=lgb_params)
+    with pytest.raises(ValueError):
+        # case when train_set is empty
+        pipeline.train({})
+
+
+def test_train_succeeds(sessions_csv_path, venues_csv_path) -> None:
+    pipeline = RankingPipeline(sessions_csv_path, venues_csv_path)
+    pipeline.prepare_datasets()
+    lgb_params = {
+        "objective": "lambdarank",
+        "num_leaves": 100,
+        "min_sum_hessian_in_leaf": 10,
+        "metric": "ndcg",
+        "ndcg_eval_at": [10, 20, 40],
+        "learning_rate": 0.8,
+        "force_row_wise": True,
+        "num_iterations": 2,
+    }
+
+    try:
+        pipeline.train(params=lgb_params)
+    except Exception as e:
+        pytest.fail(f"Failed with unexpected error: {e}")
