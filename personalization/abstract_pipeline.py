@@ -33,7 +33,7 @@ class BaseMachineLearningPipeline(ABC):
         """Abstract method that prepares the data for training the machine learning model."""
 
     @abstractmethod
-    def train(self) -> None:
+    def train(self, params: Optional[Any]) -> None:
         """Abstract method that trains the machine learning model."""
 
     @property

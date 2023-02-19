@@ -4,12 +4,22 @@ This module defines a Pipeline for ranking sessions based on venue features.
 import gc
 import logging
 import os
+import pathlib
+from typing import (
+    Any,
+    Dict,
+    Optional,
+)
 
 import lightgbm as lgb
 import polars as pl
 from sklearn.model_selection import train_test_split
 
 from .abstract_pipeline import BaseMachineLearningPipeline
+from .file_utils import (
+    check_file_location,
+    delete_file_if_exists,
+)
 
 
 class RankingPipeline(BaseMachineLearningPipeline):
@@ -32,8 +42,11 @@ class RankingPipeline(BaseMachineLearningPipeline):
     """
 
     def __init__(
-        self, sessions_bucket_path: str, venues_bucket_path: str
-    ):
+        self,
+        sessions_bucket_path: str,
+        venues_bucket_path: str,
+        **kwargs: str,
+    ) -> None:
         """
         Initialize the RankingPipeline object.
 
@@ -57,15 +70,15 @@ class RankingPipeline(BaseMachineLearningPipeline):
             )
         # EXPLAIN: we assume that we can fit datasets in memory, i.e.
         # either data volume is moderate or we are inside a high-mem instance
-        self.venues = pl.read_csv(venues_bucket_path)
+        self.venues: pl.DataFrame = pl.read_csv(venues_bucket_path)
         # if venue_id is not Int64, then enforce it, so we can join
 
-        self.sessions = pl.read_csv(sessions_bucket_path)
-        self.ranking_data = pl.DataFrame()
+        self.sessions: pl.DataFrame = pl.read_csv(sessions_bucket_path)
+        self.ranking_data: pl.DataFrame = pl.DataFrame()
         self.__validate__columns__()
-        self.group_column = "session_id"
-        self.rank_column = "rating"
-        self.label_column = "has_seen_venue_in_this_session"
+        self.group_column: str = "session_id"
+        self.rank_column: str = "rating"
+        self.label_column: str = "has_seen_venue_in_this_session"
         self.features = [
             "venue_id",
             "conversions_per_impression",
@@ -81,9 +94,22 @@ class RankingPipeline(BaseMachineLearningPipeline):
             "is_from_order_again",
             "is_recommended",
         ]
-        self.train_set = None
-        self.val_set = None
-        self.test_set = None
+        # self.train_set = None
+        self.val_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
+        self.test_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
+        self.train_set_filepath: str = ""
+        self.val_set_filepath: str = ""
+        # read train_data_path parameter if provided
+        self.train_data_path: str = kwargs.get(
+            "train_data_path", "/tmp/train_set.binary"
+        )
+        self.val_data_path = kwargs.get(
+            "val_data_path", "/tmp/val_set.binary"
+        )
+        self.n_features = len(self.features)
+        self.n_rows = 0
+        delete_file_if_exists(self.train_data_path)
+        delete_file_if_exists(self.val_data_path)
 
     def __validate__columns__(self) -> None:
         if "venue_id" not in self.venues.columns:
@@ -135,6 +161,18 @@ class RankingPipeline(BaseMachineLearningPipeline):
         )
         self.__convert__boolean__to__int__()
 
+    def __save__datasets__(self) -> None:
+        if not hasattr(self, "train_set") or self.train_set is None:
+            raise Exception("No attribute 'train_set' found")
+        if isinstance(self.train_set, pl.DataFrame):
+            raise ValueError("self.train_set is not Polars dataframe")
+        self.train_set.save_binary(self.train_data_path)
+        if not hasattr(self, "val_set") or self.val_set is None:
+            raise Exception("No attribute 'val_set' found")
+        if isinstance(self.val_set, pl.DataFrame):
+            raise ValueError("self.val_set is not Polars dataframe")
+        self.val_set.save_binary(self.val_data_path)
+
     def prepare_datasets(self) -> None:
         self.__drop__nulls__()
         self.__join__sessions__and__venues__()
@@ -171,22 +209,22 @@ class RankingPipeline(BaseMachineLearningPipeline):
             .select("count")
         )
 
-        train_y = train_set[[label_column]]
-        train_x = train_set[features]
+        train_y: pl.DataFrame = train_set[[label_column]]
+        train_x: pl.DataFrame = train_set[features]
 
         val_y = val_set[[label_column]]
         val_x = val_set[features]
 
         # test_x = test_set[features]
 
-        lgb_train_set = lgb.Dataset(
+        lgb_train_set: Any = lgb.Dataset(
             train_x.to_pandas(),
             label=train_y.to_pandas(),
             group=train_set_group_sizes.to_numpy(),
             free_raw_data=True,
         ).construct()
 
-        lgb_valid_set = lgb.Dataset(
+        lgb_valid_set: Any = lgb.Dataset(
             val_x.to_pandas(),
             label=val_y.to_pandas(),
             group=val_set_group_sizes.to_numpy(),
@@ -202,10 +240,62 @@ class RankingPipeline(BaseMachineLearningPipeline):
 
         gc.collect()
 
-        self.train_set, self.val_set = lgb_train_set, lgb_valid_set
+        self.train_set = lgb_train_set
 
-    def train(self) -> None:
-        pass
+        self.val_set = lgb_valid_set
+        self.n_rows = self.train_set.num_data()
+        self.__save__datasets__()
+
+    def __load__datasets__(self) -> None:
+        if check_file_location(self.train_data_path) is False:
+            raise ValueError(f"No train file found at {self.train}")
+        with pathlib.Path(self.train_data_path) as train_data_pathlib:
+            self.train_set = lgb.Dataset(train_data_pathlib)
+
+        if check_file_location(self.val_data_path) is False:
+            raise ValueError(f"No val file found at {self.train}")
+
+        with pathlib.Path(self.val_data_path) as val_data_pathlib:
+            self.val_set = lgb.Dataset(val_data_pathlib)
+
+    def train(self, params: Optional[Any]) -> None:
+        # EXPLAIN: due to mypy nagging typing from base class
+
+        if len(params) == 0:  # type: ignore[arg-type]
+            raise ValueError("Empty lightgbm params are passed")
+        if not isinstance(params, dict):
+            raise ValueError(
+                "params parameter is expected to be of type dict"
+            )
+        evals_logs: Dict[Any, Any] = {}
+        # check dataset exists and not empty
+        if not hasattr(self, "train_set"):
+            raise ValueError("no attribute train_set")
+        if self.train_set is None:
+            raise ValueError("train_set attribute is empty")
+        if self.train_set.num_data() == 0:
+            logging.info(
+                "train_set not found in memory, loading from bucket"
+            )
+            try:
+                self.__load__datasets__()
+            except ValueError:
+                logging.info("Failed to load file from the location")
+        if self.train_set.num_feature() != self.n_features:
+            raise ValueError(
+                "Some of the features were lost during preprocessing"
+            )
+        lgb_train_set = self.train_set
+        lgb_valid_set = self.val_set
+        self.model = lgb.train(
+            params=params,
+            train_set=lgb_train_set,
+            valid_sets=[lgb_valid_set, lgb_train_set],
+            valid_names=["val", "train"],
+            verbose_eval=25,
+            evals_result=evals_logs,
+            early_stopping_rounds=25,
+        )
 
     def __del__(self) -> None:
         """
