@@ -6,6 +6,7 @@ import pytest
 
 from personalization.ranking_pipeline import RankingPipeline
 
+
 from .utils import (
     generate_sessions_dataframe,
     generate_venues_dataframe,

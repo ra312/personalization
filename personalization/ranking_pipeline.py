@@ -134,13 +134,7 @@ class RankingPipeline(BaseMachineLearningPipeline):
             self.venues, on="venue_id"
         )
         self.__convert__boolean__to__int__()
-        # hex_string = "0a21dde9-1495-417c-bb9d-9922b81f2e6a"
-        # self.ranking_data = self.ranking_data.with_columns(
-        #     pl.col("session_id")
-        #     .str.replace("-", "")
-        #     .alias("session_id_hashed")
-        #     .hash(seed=0)
-        # )
+
 
     def prepare_datasets(self) -> None:
         self.__drop__nulls__()
@@ -215,6 +209,11 @@ class RankingPipeline(BaseMachineLearningPipeline):
         pass
 
     def __del__(self) -> None:
+
+    def train(self):
+        pass
+
+    def __del__(self):
         """
         Clean up any resources used by the RankingPipeline object.
         """
