@@ -27,5 +27,6 @@ Requirements: we want to create a machine learning pipeline which satisfies the 
 __version__ = "0.0.1"
 
 from .abstract_pipeline import BaseMachineLearningPipeline
+from .file_utils import load_model_from_artifact
 
-__all__ = ["BaseMachineLearningPipeline"]
+__all__ = ["BaseMachineLearningPipeline", "load_model_from_artifact"]

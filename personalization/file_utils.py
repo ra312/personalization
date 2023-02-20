@@ -1,5 +1,8 @@
 import logging
 import pathlib
+from typing import Any
+
+import joblib
 
 
 def delete_file_if_exists(file_path: str) -> None:
@@ -32,4 +35,10 @@ def check_file_location(file_path: str) -> bool:
 
     # Check if the file location exists and is a file
 
-    return True if pathlib_instance.is_file() else False
+    return bool(pathlib_instance.is_file())
+
+
+def load_model_from_artifact(model_artifact_bucket: str) -> Any:
+    """we load it locally for demo only"""
+    loaded_model = joblib.load(open(model_artifact_bucket, "rb"))
+    return loaded_model
