@@ -2,28 +2,16 @@ personalization
 _________________
 An end-to-end demo machine learning pipeline to provide an artifact for a real-time inference service
 
-Requirements: we want to create a machine learning pipeline which satisfies the following properties
-
-    1. Multiple Models Support: The code should support maintaining 
-    wide range of machine learning algorithms,
-    linear regression, decision trees, random forests,
-    and deep learning models, to meet diverse business requirements.
-    2. Configurability: The API should be highly configurable to
-        allow users to customize
-        the machine learning models to their specific use cases.
-        This may include hyperparameter tuning, feature selection, and feature engineering.
-    3. Flexibility: The API should be flexible enough to handle a wide range of data formats,
-    such as CSV, JSON, and Parquet. It should also support various
-    deployment environments, such as on-premises, cloud-based, and hybrid environments.
-    4. Scalability: The API should be designed with scalability in mind,
-    meaning it can handle large volumes of data, high request rates, and multiple concurrent users.
-    This may involve incorporating distributed computing
-    and parallel processing techniques to handle the workload.
-    5. Support versioning with MLFlow
-    6. Documentation: The API should be accompanied by comprehensive documentation,
-    including user manuals, API reference guides, and developer documentation.
-    This will make it easier for users to learn
-    how to use the API and integrate it into their applications.
+Requirements: we want to create a machine learning pipeline which satisfies the following properties that given
+data can train the model and save it to artifact. 
+Our implementation of the package 'personalization'
+We choose to use Polars to read data, it is roughly 2-3 times faster than Pandas and supports nice API for 
+aggregations and features creation.
+For the model part, we decided to take lightGBM  due to ts speed, small size (model artifact size up to 50 Mb on 300 million rows of search data) and explainability. The user should choose lightGBM parameters carefully.
+We tested an example lightgbm params in notebooks/train.ipynb.
+The offline evaluation has been done in notebooks/train.ipynb, we can see significant increase in NDCG levels across venues with our model against the baseline.
+The code is tested in Github Actions, current coverage is around 80 percent.
+The inference service code can be found here https://github.com/ra312/model-server
 # How to run
 
 1. obttain sessions.csv and venues.csv and move them to the root folder
@@ -32,7 +20,7 @@ Requirements: we want to create a machine learning pipeline which satisfies the 
 ```console
     python -m pip instal personalization
 ```
-4. Train pipeline and get artifact, copy this into bash
+1. Train pipeline and get artifact, copy this into bash
 ```console
 python3 -m personalization \
     --sessions-bucket-path sessions.csv \
@@ -46,6 +34,12 @@ python3 -m personalization \
     --num_iterations 10 \
     --trained-model-path trained_model.joblib
 ```
+#TODO:
+For demo purposes, we choose to ingest sessiona and venues data locally and save model file locally. Given more time and infrastructure, I would add more things
+#TODO:
+1. Scalability: add Flyte workflow (reusing the code here)
+2. Data: add support to ingest sessions and venues data from a database
+3. Versioning: add MLFlow integration
 
 [![PyPI version](https://badge.fury.io/py/personalization.svg)](http://badge.fury.io/py/personalization)
 [![Test Status](https://github.com/ra312/personalization/workflows/Test/badge.svg?branch=develop)](https://github.com/ra312/personalization/actions?query=workflow%3ATest)
