@@ -1,7 +1,9 @@
 personalization
 _________________
 An end-to-end demo machine learning pipeline to provide an artifact for a real-time inference service
+
 Requirements: we want to create a machine learning pipeline which satisfies the following properties
+
     1. Multiple Models Support: The API should support a
     wide range of machine learning algorithms,
     linear regression, decision trees, random forests,
