@@ -4,7 +4,7 @@ An end-to-end demo machine learning pipeline to provide an artifact for a real-t
 
 Requirements: we want to create a machine learning pipeline which satisfies the following properties
 
-    1. Multiple Models Support: The API should support a
+    1. Multiple Models Support: The code should support maintaining 
     wide range of machine learning algorithms,
     linear regression, decision trees, random forests,
     and deep learning models, to meet diverse business requirements.
@@ -20,11 +20,33 @@ Requirements: we want to create a machine learning pipeline which satisfies the 
     This may involve incorporating distributed computing
     and parallel processing techniques to handle the workload.
     5. Support versioning with MLFlow
-    5. Documentation: The API should be accompanied by comprehensive documentation,
+    6. Documentation: The API should be accompanied by comprehensive documentation,
     including user manuals, API reference guides, and developer documentation.
     This will make it easier for users to learn
     how to use the API and integrate it into their applications.
-    
+# How to run
+
+1. obttain sessions.csv and venues.csv and move them to the root folder
+2. Check python --verrsion > 3.8.1 
+3. Install personalization
+```console
+    python -m pip instal personalization
+```
+4. Train pipeline and get artifact, copy this into bash
+```console
+python3 -m personalization \
+    --sessions-bucket-path sessions.csv \
+    --venues-bucket-path venues.csv \
+    --objective lambdarank \
+    --num_leaves 100 \
+    --min_sum_hessian_in_leaf 10 \
+    --metric ndcg --ndcg_eval_at 10 20 \
+    --learning_rate 0.8 \
+    --force_row_wise True \
+    --num_iterations 10 \
+    --trained-model-path trained_model.joblib
+```
+
 [![PyPI version](https://badge.fury.io/py/personalization.svg)](http://badge.fury.io/py/personalization)
 [![Test Status](https://github.com/ra312/personalization/workflows/Test/badge.svg?branch=develop)](https://github.com/ra312/personalization/actions?query=workflow%3ATest)
 [![Lint Status](https://github.com/ra312/personalization/workflows/Lint/badge.svg?branch=develop)](https://github.com/ra312/personalization/actions?query=workflow%3ALint)

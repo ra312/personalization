@@ -42,3 +42,5 @@ def load_model_from_artifact(model_artifact_bucket: str) -> Any:
     """we load it locally for demo only"""
     loaded_model = joblib.load(open(model_artifact_bucket, "rb"))
     return loaded_model
+def save_model_to_file(traine_model: Any, model_path: str) -> None:
+    joblib.dump(traine_model, model_path)
