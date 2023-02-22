@@ -1,6 +1,6 @@
 import pytest
 
-from personalization import BaseMachineLearningPipeline
+from personalization.abstract_pipeline import BaseMachineLearningPipeline
 
 
 class DummyPipeline(BaseMachineLearningPipeline):

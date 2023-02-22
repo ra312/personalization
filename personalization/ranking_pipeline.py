@@ -19,8 +19,19 @@ from .abstract_pipeline import BaseMachineLearningPipeline
 from .file_utils import (
     check_file_location,
     delete_file_if_exists,
+    save_model_to_file
 )
 
+__DEFAULT__LGB__PARAMS__  = {
+    "objective": "lambdarank",
+    "num_leaves": 100,
+    "min_sum_hessian_in_leaf": 10,
+    "metric": "ndcg",
+    "ndcg_eval_at": [10, 20, 40],
+    "learning_rate": 0.8,
+    "force_row_wise": True,
+    "num_iterations": 10,
+}
 
 class RankingPipeline(BaseMachineLearningPipeline):
     """
@@ -82,19 +93,15 @@ class RankingPipeline(BaseMachineLearningPipeline):
         self.features = [
             "venue_id",
             "conversions_per_impression",
-            #  "purchased",
             "price_range",
             "rating",
             "popularity",
             "retention_rate",
-            # 'session_id_hashed',
             "position_in_list",
-            #  'has_seen_venue_in_this_session',
-            #  'is_new_user',
             "is_from_order_again",
             "is_recommended",
         ]
-        # self.train_set = None
+
         self.val_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
         self.test_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
         self.train_set_filepath: str = ""
@@ -209,8 +216,8 @@ class RankingPipeline(BaseMachineLearningPipeline):
             .select("count")
         )
 
-        train_y: pl.DataFrame = train_set[[label_column]]
-        train_x: pl.DataFrame = train_set[features]
+        train_y = train_set[[label_column]]
+        train_x = train_set[features]
 
         val_y = val_set[[label_column]]
         val_x = val_set[features]
@@ -262,7 +269,13 @@ class RankingPipeline(BaseMachineLearningPipeline):
         # EXPLAIN: due to mypy nagging typing from base class
 
         if len(params) == 0:  # type: ignore[arg-type]
-            raise ValueError("Empty lightgbm params are passed")
+            params = __DEFAULT__LGB__PARAMS__
+            logging.info("Empty lightgbm params are passed")
+            logging.info("#" *10)
+            logging.info(" ... using default params")
+            params = params.update(__DEFAULT__LGB__PARAMS__)
+            logging.info(params)
+            logging.info("#" *10)
         if not isinstance(params, dict):
             raise ValueError(
                 "params parameter is expected to be of type dict"
@@ -296,7 +309,9 @@ class RankingPipeline(BaseMachineLearningPipeline):
             evals_result=evals_logs,
             early_stopping_rounds=25,
         )
-
+    def export_model_artifact(self, model_path: str):
+        save_model_to_file(traine_model=self.model, model_path=model_path)
+        # TODO: add MLFlow integration and gcs integration
     def __del__(self) -> None:
         """
         Clean up any resources used by the RankingPipeline object.
