@@ -209,8 +209,8 @@ class RankingPipeline(BaseMachineLearningPipeline):
             .select("count")
         )
 
-        train_y: pl.DataFrame = train_set[[label_column]]
-        train_x: pl.DataFrame = train_set[features]
+        train_y = train_set[[label_column]]
+        train_x = train_set[features]
 
         val_y = val_set[[label_column]]
         val_x = val_set[features]
