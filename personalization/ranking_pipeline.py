@@ -19,10 +19,10 @@ from .abstract_pipeline import BaseMachineLearningPipeline
 from .file_utils import (
     check_file_location,
     delete_file_if_exists,
-    save_model_to_file
+    save_model_to_file,
 )
 
-__DEFAULT__LGB__PARAMS__  = {
+__DEFAULT__LGB__PARAMS__ = {
     "objective": "lambdarank",
     "num_leaves": 100,
     "min_sum_hessian_in_leaf": 10,
@@ -32,6 +32,7 @@ __DEFAULT__LGB__PARAMS__  = {
     "force_row_wise": True,
     "num_iterations": 10,
 }
+
 
 class RankingPipeline(BaseMachineLearningPipeline):
     """
@@ -271,11 +272,11 @@ class RankingPipeline(BaseMachineLearningPipeline):
         if len(params) == 0:  # type: ignore[arg-type]
             params = __DEFAULT__LGB__PARAMS__
             logging.info("Empty lightgbm params are passed")
-            logging.info("#" *10)
+            logging.info("#" * 10)
             logging.info(" ... using default params")
             params = params.update(__DEFAULT__LGB__PARAMS__)
             logging.info(params)
-            logging.info("#" *10)
+            logging.info("#" * 10)
         if not isinstance(params, dict):
             raise ValueError(
                 "params parameter is expected to be of type dict"
@@ -309,9 +310,13 @@ class RankingPipeline(BaseMachineLearningPipeline):
             evals_result=evals_logs,
             early_stopping_rounds=25,
         )
-    def export_model_artifact(self, model_path: str):
-        save_model_to_file(traine_model=self.model, model_path=model_path)
+
+    def export_model_artifact(self, model_path: str) -> None:
+        save_model_to_file(
+            traine_model=self.model, model_path=model_path
+        )
         # TODO: add MLFlow integration and gcs integration
+
     def __del__(self) -> None:
         """
         Clean up any resources used by the RankingPipeline object.

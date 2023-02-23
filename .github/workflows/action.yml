@@ -2,11 +2,21 @@ name: CI
 
 on:
   push:
+    branches:
+      - 'ci/**'
+      - 'main'
     paths:
       - 'personalization/**'
+      - 'tests/**'
+      - 'Dockerfile'
   pull_request:
+    branches:
+      - 'ci/**'
+      - 'main'
     paths:
       - 'personalization/**'
+      - 'tests/**'
+      - 'Dockerfile'
 
 env:
   PYTHON_VERSION: ${{ secrets.PYTHON_VERSION }}
@@ -28,20 +38,12 @@ jobs:
           curl -sSL https://install.python-poetry.org/ | POETRY_VERSION=${{ env.POETRY_VERSION }} python
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies
+      - name: Install dependencies and main package
         run: |
           poetry install --no-root
-
-      - name: Run pre-commit
-        run: |
-          poetry run pre-commit run --all-files --color always || true
-
-      - name: Run tests
-        run: |
+          poetry install
+          poetry run pre-commit run --show-diff-on-failure --color=always
           poetry run coverage run --omit 'tests/*' -m pytest
-
-      - name: Check coverage
-        run: |
           poetry run coverage report -m > coverage.txt
           total_coverage=$(tail -n 1 coverage.txt  | awk '{print $NF}' | sed 's/%//')
           echo "Coverage is $total_coverage%"
@@ -82,3 +84,28 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: unittests
+  build-docker-image:
+    name: Build Docker image
+    needs: install-deps-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.install-deps-and-test.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USER_NAME }}
+          password: ${{ secrets.DOCKERHUB_USER_PASSWORD }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: username/personalization:latest
