@@ -102,8 +102,9 @@ def train_and_export(parsed_args: argparse.Namespace) -> None:
         sessions_bucket_path=parsed_args.sessions_bucket_path,
         venues_bucket_path=parsed_args.venues_bucket_path,
     )
+    
     pipeline.prepare_datasets()
-
+    
     pipeline.train(params=lgbm_params)
     pipeline.export_model_artifact(
         model_path=parsed_args.trained_model_path
