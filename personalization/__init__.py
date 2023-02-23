@@ -1,7 +1,5 @@
-"""**personalization**
-
-
-
+"""
+pipeline to train personalization model
 """
 __version__ = "0.0.1"
 
