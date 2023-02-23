@@ -28,22 +28,57 @@ jobs:
           curl -sSL https://install.python-poetry.org/ | POETRY_VERSION=${{ env.POETRY_VERSION }} python
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Install dependencies and main package
+      - name: Install dependencies
         run: |
           poetry install --no-root
-          poetry install
+
+      - name: Run pre-commit
+        run: |
           poetry run pre-commit run --all-files --color always || true
+
+      - name: Run tests
+        run: |
           poetry run coverage run --omit 'tests/*' -m pytest
+
+      - name: Check coverage
+        run: |
           poetry run coverage report -m > coverage.txt
           total_coverage=$(tail -n 1 coverage.txt  | awk '{print $NF}' | sed 's/%//')
           echo "Coverage is $total_coverage%"
+
+  publish:
+    name: Publish to PyPI
+    needs: install-deps-and-test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.install-deps-and-test.result == 'success'
+    env:
+      TWINE_USERNAME: ${{ secrets.PYPI_USER_NAME }}
+      TWINE_PASSWORD: ${{ secrets.PYPI_USER_PASSWORD }}
+      TWINE_NON_INTERACTIVE: 0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org/ | POETRY_VERSION=${{ env.POETRY_VERSION }} python
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root
+
       - name: Publish to PyPI
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        env:
-          TWINE_USERNAME: ${{ env.PYPI_USER_NAME }}
-          TWINE_PASSWORD: ${{ env.PYPI_USER_PASSWORD }}
-          TWINE_NON_INTERACTIVE: 0
         run: |
           rm -rf dist
           poetry build -f wheel
           poetry run twine upload --skip-existing dist/*
+
+      - name: Publish coverage to Codecov
+        uses: codecov/codecov-action@v1.1.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
