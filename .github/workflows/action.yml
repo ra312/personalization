@@ -87,7 +87,7 @@ jobs:
   build-docker-image:
     name: Build Docker image
     needs: install-deps-and-test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.install-deps-and-test.result == 'success'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/ci/**') && github.event_name == 'push' && needs.install-deps-and-test.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
