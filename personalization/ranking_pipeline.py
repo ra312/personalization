@@ -102,11 +102,8 @@ class RankingPipeline(BaseMachineLearningPipeline):
             "is_from_order_again",
             "is_recommended",
         ]
-
+        self.train_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
         self.val_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
-        self.test_set: lgb.Dataset = lgb.Dataset(data=[])  # type: ignore[no-any-unimported]
-        self.train_set_filepath: str = ""
-        self.val_set_filepath: str = ""
         # read train_data_path parameter if provided
         self.train_data_path: str = kwargs.get(
             "train_data_path", "/tmp/train_set.binary"
@@ -115,7 +112,6 @@ class RankingPipeline(BaseMachineLearningPipeline):
             "val_data_path", "/tmp/val_set.binary"
         )
         self.n_features = len(self.features)
-        self.n_rows = 0
         delete_file_if_exists(self.train_data_path)
         delete_file_if_exists(self.val_data_path)
 
@@ -189,7 +185,7 @@ class RankingPipeline(BaseMachineLearningPipeline):
             self.ranking_data, train_size=0.2, test_size=0.8
         )
 
-        val_set, test_set = train_test_split(
+        val_set, _ = train_test_split(
             unseen_set, train_size=0.2, test_size=0.8
         )
         group_column = self.group_column
@@ -223,8 +219,6 @@ class RankingPipeline(BaseMachineLearningPipeline):
         val_y = val_set[[label_column]]
         val_x = val_set[features]
 
-        # test_x = test_set[features]
-
         lgb_train_set: Any = lgb.Dataset(
             train_x.to_pandas(),
             label=train_y.to_pandas(),
@@ -240,9 +234,6 @@ class RankingPipeline(BaseMachineLearningPipeline):
             free_raw_data=True,
         ).construct()
 
-        # some memory management
-        # del train_set
-        # del val_set
         del train_y
         del train_x
 
@@ -251,7 +242,6 @@ class RankingPipeline(BaseMachineLearningPipeline):
         self.train_set = lgb_train_set
 
         self.val_set = lgb_valid_set
-        self.n_rows = self.train_set.num_data()
         self.__save__datasets__()
 
     def __load__datasets__(self) -> None:
@@ -311,7 +301,7 @@ class RankingPipeline(BaseMachineLearningPipeline):
             early_stopping_rounds=25,
         )
 
-    def export_model_artifact(self, model_path: str):
+    def export_model_artifact(self, model_path: str)-> None:
         save_model_to_file(
             traine_model=self.model, model_path=model_path
         )
