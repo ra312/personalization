@@ -101,7 +101,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USER_NAME }}
-          password: ${{ secrets.DOCKERHUB_USER_PASSWORD }}
+          password: ${{ secrets.DOCKER_TOKEN }}
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
