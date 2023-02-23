@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "personalization"
-version = "0.0.1"
+version = "0.0.2"
 description = "An end-to-end machine learning pipeline to train ml model and deploy it to realtime inference endpoint"
 authors = ["Rauan Akylzhanov <akylzhanov.r@gmail.com>"]
 license = "MIT"
