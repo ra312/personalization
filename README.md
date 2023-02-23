@@ -17,16 +17,13 @@ The code is checked with pre-commit configs, tested and published in Github Acti
 
 The inference service code can be found here https://github.com/ra312/model-server
 # How to run
-
-1. obtain sessions.csv and venues.csv and move them to the root folder
-2. Check python --verrsion > 3.8.1 
-3. Install personalization
+1. Obtain sessions.csv and venues.csv and move them to the root folder
+2. Install personalization
 ```console
     python -m pip instal personalization
 ```
-1. Train pipeline and get artifact,
- 
-   please run the following command in shell
+3. Run the following command in shell to train pipeline and get artifact:
+   
 ```console
 python3 -m personalization \
     --sessions-bucket-path sessions.csv \
@@ -42,9 +39,8 @@ python3 -m personalization \
 ```
 
 # TODO
-For demo purposes, we choose to ingest sessiona and venues data locally and save model file locally. Given more time and infrastructure, I would add more things
-
-1. Scalability: add Flyte workflow (reusing the code here)
+Next steps:
+1. Scalability(e.g. use Flyte)
 2. Data: add support to ingest sessions and venues data from a database
 3. Versioning: add MLFlow integration
 
@@ -59,91 +55,6 @@ For demo purposes, we choose to ingest sessiona and venues data locally and save
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://timothycrosley.github.io/isort/)
 [![CI](https://github.com/ra312/personalization/actions/workflows/action.yml/badge.svg)](https://github.com/ra312/personalization/actions/workflows/action.yml)
 _________________
-
-[Read Latest Documentation](https://ra312.github.io/personalization/) - [Browse GitHub Code Repository](https://github.com/ra312/personalization/)
-_________________
-=======
-# model server
-```mermaid
----
-title: REST-inference service
----
-classDiagram
-    note "100 requests per second"
-
-    class VenueRating{
-    """
-    Represents the predicted ranking of a venue.
-
-    Attributes:
-    -----------
-    venue_id : int The ID of the venue being rated.
-    q80_predicted_rank : float
-        The predicted ranking of the venue,
-        as a 80-quantile of predicted rating
-        for venue across available sessions
-    """
-    venue_id: int
-    q80_predicted_rank: float
-    }
-    class TrainingPipeline{
-      str pre-trained-model-file: stored with mlflow in gcs bucket
-    }
-
-    class InferenceFeatures{
-    venue_id: int
-    conversions_per_impression: float
-    price_range: int
-    rating: float
-    popularity: float
-    retention_rate: float
-    session_id_hashed: int
-    position_in_list: int
-    is_from_order_again: int
-    is_recommended: int
-    }
-    class FastAPIEndpoint{
-      def predict_ratings(): Callabe
-    }
-
-    class Model_Instance{
-        joblib.load(model_artifact_bucket)
-        str model_artifact_bucket - variable
-        str rank_column - fixed for the model
-        str group_column - fixed for the model
-    }
-    TrainingPipeline --|> Model_Instance
-    InferenceFeatures --|> FastAPIEndpoint
-    Model_Instance --|> FastAPIEndpoint
-    FastAPIEndpoint --|> VenueRating
-
-```
-
-[![PyPI](https://img.shields.io/pypi/v/model-server?style=flat-square)](https://pypi.python.org/pypi/model-server/)
-
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/model-server?style=flat-square)](https://pypi.python.org/pypi/model-server/)
-
-[![PyPI - License](https://img.shields.io/pypi/l/model-server?style=flat-square)](https://pypi.python.org/pypi/model-server/)
-
-[![Coookiecutter - Wolt](https://img.shields.io/badge/cookiecutter-Wolt-00c2e8?style=flat-square&logo=cookiecutter&logoColor=D4AA00&link=https://github.com/woltapp/wolt-python-package-cookiecutter)](https://github.com/woltapp/wolt-python-package-cookiecutter)
-
-
----
-
-**Documentation**: [https://ra312.github.io/model-server](https://ra312.github.io/model-server)
-**Training Source Code**: [https://github.com/ra312/personalization](https://github.com/ra312/personalization)
-**Source Code**: [https://github.com/ra312/model-server](https://github.com/ra312/model-server)
-**PyPI**: [https://pypi.org/project/model-server/](https://pypi.org/project/model-server/)
-
----
-
-A model server  for almost realtime inference
-
-## Installation
-
-```sh
-pip install model-server
-```
 
 ## Development
 
@@ -168,22 +79,6 @@ poetry shell
 ```sh
 pytest
 ```
-
-### Documentation
-
-The documentation is automatically generated from the content of the [docs directory](./docs) and from the docstrings
- of the public signatures of the source code. The documentation is updated and published as a [Github project page
- ](https://pages.github.com/) automatically as part each release.
-
-### Releasing
-
-Trigger the [Draft release workflow](https://github.com/ra312/model-server/actions/workflows/draft_release.yml)
-(press _Run workflow_). This will update the changelog & version and create a GitHub release which is in _Draft_ state.
-
-Find the draft release from the
-[GitHub releases](https://github.com/ra312/model-server/releases) and publish it. When
- a release is published, it'll trigger [release](https://github.com/ra312/model-server/blob/master/.github/workflows/release.yml) workflow which creates PyPI
- release and deploys updated documentation.
 
 ### Pre-commit
 
