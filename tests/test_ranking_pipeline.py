@@ -10,7 +10,6 @@ from .utils import (
     generate_sessions_dataframe,
     generate_venues_dataframe,
 )
-from personalization import __DEFAULT__LGB__PARAMS__
 
 
 @pytest.fixture
