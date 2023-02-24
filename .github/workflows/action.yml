@@ -5,18 +5,10 @@ on:
     branches:
       - 'ci/**'
       - 'main'
-    paths:
-      - 'personalization/**'
-      - 'tests/**'
-      - 'Dockerfile'
   pull_request:
     branches:
       - 'ci/**'
       - 'main'
-    paths:
-      - 'personalization/**'
-      - 'tests/**'
-      - 'Dockerfile'
 
 env:
   PYTHON_VERSION: ${{ secrets.PYTHON_VERSION }}
