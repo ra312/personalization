@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "personalization"
-version = "0.1.0"
+version = "0.1.1"
 description = "An end-to-end machine learning pipeline to train ml model and deploy it to realtime inference endpoint"
 authors = ["Rauan Akylzhanov <akylzhanov.r@gmail.com>"]
 license = "MIT"
@@ -9,19 +9,17 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0"
 scikit-learn = "^1.2.1"
-pre-commit = "^3.0.4"
-autoflake = "^2.0.1"
 polars = "^0.16.6"
 pandas = "^1.5.3"
-coverage = "^7.1.0"
-ipykernel = "^6.21.2"
-jupyter = "^1.0.0"
+
 lightgbm = "^3.3.5"
-matplotlib = "^3.7.0"
 pyarrow = "^11.0.0"
 twine = "^4.0.2"
 
 [tool.poetry.dev-dependencies]
+pre-commit = "^3.0.4"
+autoflake = "^2.0.1"
+coverage = "^7.1.0"
 vulture = ">=1.0"
 bandit = ">=1.6"
 safety = ">=1.8"
